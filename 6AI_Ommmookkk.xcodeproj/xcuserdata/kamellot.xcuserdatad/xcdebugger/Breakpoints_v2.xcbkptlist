@@ -7,15 +7,31 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "85A1CC7E-CDAE-461C-876C-A831D39C92C1"
+            uuid = "E6236C16-84B4-4F8C-A68F-E650C865E547"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "6AI_Ommmookkk/main.c"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "286"
+            endingLineNumber = "286"
+            landmarkName = "alphaBetaSearch()"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "ECCE8076-2211-4919-86A6-A26A5F32FC6C"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "6AI_Ommmookkk/main.c"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "530"
-            endingLineNumber = "530"
+            startingLineNumber = "505"
+            endingLineNumber = "505"
             landmarkName = "main()"
             landmarkType = "9">
          </BreakpointContent>
@@ -23,16 +39,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "2851CC66-37B4-4DC7-A2FB-75E9C340D435"
+            uuid = "80501AE4-A268-41E9-B641-3DC38727D6A0"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "6AI_Ommmookkk/main.c"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "531"
-            endingLineNumber = "531"
-            landmarkName = "main()"
+            startingLineNumber = "304"
+            endingLineNumber = "304"
+            landmarkName = "MaxValue(alpha, beta, depth)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>

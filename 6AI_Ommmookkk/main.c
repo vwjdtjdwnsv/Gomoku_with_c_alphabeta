@@ -128,8 +128,8 @@ int closeColumn(int x, int y){
         i++;
     if(board[x-i][y]=='+')
         close++;
-     
-    i=1;
+    
+    i = 1;
     while ((x+i <= N-1) && (board[x+i][y] == board[x][y]))
         i++;
     if (board[x+i][y]=='+')
@@ -252,11 +252,28 @@ bool isFinish(int x,int y){
 }
 
 
+//----------------------AI 관련함수-------------------------------------------------------------------------------------
 
+void DeepSearch(int x,int y,char color){
+    status[stage].x=x;
+    status[stage].y=y;
+    setDol(x, y, color);
+    stage++;
+//    printf("deep \n");
+//    printBoard();
+};//깊이를 하나 내려가는 것
 
+void Backtracking(void){
+    int x = status[stage-1].x;
+    int y = status[stage-1].y;
+    board[x][y]='+';
+    status[stage-1].x = -1;
+    status[stage-1].y = -1;
+    stage--;
+//    printf("back \n");
+//    printBoard();
+};//깊이 하나 제거, 다시 올라오기
 
-
-//AI 관련함수-------------------------------------------------------------------------------------
 struct coordinate getNextMove(){
     struct coordinate nextMove;//여기에 알파베타 적용!!!!!!!!!!!!!!!!!!!
     return nextMove=alphaBetaSearch();
@@ -266,151 +283,127 @@ struct coordinate alphaBetaSearch(){
     int alpha = -300000;
     int beta = 300000;
     int depth = 0;//현재 깊이
-    int choiceValue = 0;
-    struct action *posActions = getActions(player_color, false);//여기서 바꿔줘야 함!MIN이 가능한 action 설계
-    for(int i=0; posActions[i].move.x!=-1; i++) {
-        DeepSearch(posActions[i].move.x, posActions[i].move.y,ai_color);//이제 Max가 값을 비교해야 함
-        posActions[i].value = MaxValue(alpha, beta, depth+1);//action의 value 초기화 할 필요도 없었지만 함수 재활용 위해
-        choiceValue = MAX(choiceValue, posActions[i].value);//나중에 고를 최댓값 구하기
-        Backtracking();//다시 돌아와서,반복문 돌기
-    }
-    int i = 0;
-    while (posActions[i].value!=choiceValue) {
-        i++;
-    }
-    return posActions[i].move;
+    return MaxValue(alpha, beta, depth+1).move;
     //다 돌았다면, 최대값 찾기,그리고 반환
 }
 
-void DeepSearch(int x,int y,char color){
-    stage++;
-    status[stage].x=x;
-    status[stage].y=y;
-    setDol(x, y, color);
-    printf("deep \n");
-//    printBoard();
-};//깊이를 하나 내려가는 것
 
-void Backtracking(void){
-    int x = status[stage].x;
-    int y = status[stage].y;
-    board[x][y]='+';
-    status[stage].x = -1;
-    status[stage].y = -1;
-    stage--;
-    printf("back \n");
-//    printBoard();
-};//깊이 하나 제거, 다시 올라오기
-
-
-int MaxValue(int alpha,int beta,int depth){//current를 알고 있다.
-//    printf("%d \n",Utility(status[stage].x, status[stage].y, true));
-    if ((depth==depthLimit)||isFinish(x, y)) {
-        printf("%d \n",Utility(status[stage].x, status[stage].y, true));
-        return Utility(status[stage].x, status[stage].y,true);
-        
-        //AI의 turn을 true, 상대의 수를 견제하는 의미로 상대방의 가중치를 빼준다(서로 부호가 반대이므로)
-    }
-    int returnValue = -300000;//value초기화
-    struct action *posActions = getActions(player_color, false);//여기서 바꿔줘야 함!MIN이 가능한 action 설계
-    for(int i=0; posActions[i].move.x!=-1; i++) {
-        DeepSearch(posActions[i].move.x, posActions[i].move.y ,player_color);//이제 Max가 값을 비교해야 함
-        posActions[i].value = MAX(posActions[i].value, MinValue(alpha, beta,depth+1));
-        if (posActions[i].value >= beta){
-            Backtracking();//다시 돌아와서,반복문 돌기
-            return posActions[i].value;//value > beta
+struct action MaxValue(int alpha,int beta,int depth){//current를 알고 있다.
+    struct action *MaxActions = getActions(ai_color, true);//ai가 둘 수 있는 수,value -무한 초기화
+    struct action returnAction;
+    returnAction.value = -300000;//반환할 값 초기화
+    for(int i=0; MaxActions[i].move.x!=-1; i++) {
+        DeepSearch(MaxActions[i].move.x, MaxActions[i].move.y ,ai_color);//일단 ai deep해보고
+        printf("max x : %d, y : %d \n",MaxActions[i].move.x,MaxActions[i].move.y);
+        if ((depth==depthLimit)||isFinish(x, y)){
+            MaxActions[i].value = Utility(MaxActions[i].move.x, MaxActions[i].move.y,true);
+            printf("max 유틸리티 : %d \n \n", Utility(MaxActions[i].move.x, MaxActions[i].move.y,true));
         }
-        alpha = MAX(alpha, posActions[i].value); //alpha = MAX(alpha,value)
+        //최대깊이면, 바로 value에 utility값 넣어주고
+        else
+            MaxActions[i].value = MAX(MaxActions[i].value, MinValue(alpha, beta,depth+1).value);
+        //아니라면 Min호출,반환한 action의 value값 넣어준다.
+        alpha = MAX(alpha, MaxActions[i].value); //alpha = MAX(alpha,value)
+        if (MaxActions[i].value >= beta){
+            Backtracking();
+            return MaxActions[i];//만약 beta보다 큰 값 발견했다면, 더 이상 탐색할 필요 없다. 어차피 선택 안될테니까.
+        }
+        returnAction = (returnAction.value > MaxActions[i].value) ? returnAction : MaxActions[i];//최대값 action 반환
         Backtracking();//다시 돌아와서,반복문 돌기
-        
-    }
-    return returnValue;
+    }//반복 끝, 반환
+    void free(void* MaxActions);
+    return returnAction;
 }
 
-int MinValue(int alpha,int beta, int depth){//current를 알고 있다.
-//    printf("%d \n",Utility(status[stage].x, status[stage].y, true));
-    if ((depth==depthLimit)||isFinish(x, y)) {
-        printf("%d \n",Utility(status[stage].x, status[stage].y, false));
-        return Utility(status[stage].x, status[stage].y,false);
-    }
-    int returnValue = +300000;//value초기화
-    struct action *posActions = getActions(player_color, false);//여기서 바꿔줘야 함!MIN이 가능한 action 설계
-    for(int i=0; posActions[i].move.x!=-1; i++) {
-        DeepSearch(posActions[i].move.x, posActions[i].move.y,ai_color);
-        posActions[i].value = MIN(posActions[i].value, MaxValue(alpha, beta,depth+1));
-        if (posActions[i].value <= alpha){
-            Backtracking();//다시 돌아와서,반복문 돌기
-            return posActions[i].value;//value <= alpha
+struct action MinValue(int alpha,int beta, int depth){
+    struct action *MinActions = getActions(player_color, false);
+    struct action returnAction;
+    returnAction.value = 300000;//반환할 값 초기화
+    for(int i=0; MinActions[i].move.x!=-1; i++) {
+        DeepSearch(MinActions[i].move.x, MinActions[i].move.y,player_color);
+        printf("min x : %d, y : %d \n",MinActions[i].move.x,MinActions[i].move.y);
+        if ((depth==depthLimit)||isFinish(x, y)){
+            MinActions[i].value = Utility(MinActions[i].move.x, MinActions[i].move.y,false);
+            printf("min 유틸리티 : %d \n \n", Utility(MinActions[i].move.x, MinActions[i].move.y,false));
         }
-        beta = MIN(beta,posActions[i].value); //beta = MIN(beta,value)
-        Backtracking();//다시 돌아와서,반복문 돌기
+        else
+            MinActions[i].value = MIN(MinActions[i].value, MaxValue(alpha, beta,depth+1).value);
+        beta = MIN(beta,MinActions[i].value); //beta = MIN(beta,value)
+        if (MinActions[i].value <= alpha){
+            Backtracking();
+            return MinActions[i];
+        }
+        returnAction = (returnAction.value < MinActions[i].value) ? returnAction : MinActions[i];//최대값 action 반환
+        Backtracking();//다시 돌아와서,반복문 돌
     }
-    return returnValue;
+    void free(void* MinActions);
+    return returnAction;
 }
+
 
 int Utility(int x, int y,bool turn){
     int score = 0;
     if (isFinish(x, y)) {
-        score=30000;
+        score+=30000;
     }
     //승리
     if(checkRow(x, y)==4&&closeRow(x, y)==2){
-        score=10000;
+        score+=10000;
     }
     if(checkColumn(x, y)==4&&closeColumn(x, y)==2){
-        score=10000;
+        score+=10000;
     }
     if(checkRdig(x, y)==4&&closeRdig(x, y)==2){
-        score=10000;
+        score+=10000;
     }
     if(checkDig(x, y)==4&&closeDig(x, y)==2){
-        score=10000;
+        score+=10000;
     }
     //다음 턴 무조건 승리
     
     if(checkRow(x, y)==4&&closeRow(x, y)==1){
-        score=4000;
+        score+=4000;
     }
     if(checkColumn(x, y)==4&&closeColumn(x, y)==1){
-        score=4000;
+        score+=4000;
     }
     if(checkRdig(x, y)==4&&closeRdig(x, y)==1){
-        score=4000;
+        score+=4000;
     }
     if(checkDig(x, y)==4&&closeDig(x, y)==1){
-        score=4000;
+        score+=4000;
     }
     //상대가 눈치 못 채면 승리 방어 여부 존재
     
-    if(checkRow(x, y)==3&&closeRow(x, y)==2){
-        score=8000;
+    if(checkRow(x, y)==3 && closeRow(x, y)==2){
+        score+=8000;
     }
-    if(checkColumn(x, y)==3&&closeColumn(x, y)==2){
-        score=8000;
+    if(checkColumn(x, y)==3 && closeColumn(x, y)==2){
+        score+=8000;
     }
-    if(checkRdig(x, y)==3&&closeRdig(x, y)==2){
-        score=8000;
+    if(checkRdig(x, y)==3 && closeRdig(x, y)==2){
+        score+=8000;
     }
-    if(checkDig(x, y)==3&&closeDig(x, y)==2){
-        score=8000;
+    if(checkDig(x, y)==3 && closeDig(x, y)==2){
+        score+=8000;
     }
     //가장 적극적으로 만들어야될 열린 33
     //단방향 4보다 더 적극적으로 만들어야함
-    if(checkRow(x, y)==2&&closeRow(x, y)==1){
-        score=500;
+    if(checkRow(x, y)==2&&closeRow(x, y)==2){
+        score+=500;
     }
     if(checkColumn(x, y)==2&&closeColumn(x, y)==2){
-        score=500;
+        score+=500;
     }
     if(checkRdig(x, y)==2&&closeRdig(x, y)==2){
-        score=500;
+        score+=500;
     }
     if(checkDig(x, y)==2&&closeDig(x, y)==2){
-        score=500;
+        score+=500;
     }
     //열린 2, 언제든지 열린 3으로 발전 가능, 하지만 돌이 너무 뭉친다... 그게 더 좋은건가?적당히 뭉쳤으면
     else{
-        score=(checkRow(x,y)*closeRow(x, y))+(checkColumn(x,y)*closeColumn(x, y))+(checkDig(x,y)*closeDig(x, y))+(checkRdig(x,y)*closeRdig(x, y));
+        score+=5;
     }
         
     //그 외 단방향 3, 단방향 2,,, 닫힌 경우는 뭘 해도 어지간하면 의미 없음
@@ -491,8 +484,8 @@ int main() {
             }
             status[stage].x=x;
             status[stage].y=y;
-            printf("\n stage : %d, coord x: %d,coord y : %d \n",stage,status[stage].x,status[stage].y);
-            printf("%d,%d\n",x,y);
+//            printf("\n stage : %d, coord x: %d,coord y : %d \n",stage,status[stage].x,status[stage].y);
+//            printf("%d,%d\n",x,y);
             printBoard();
         }
         
@@ -506,7 +499,9 @@ int main() {
             else{
                 status[stage] = getNextMove();//보드,현재 돌이 있는 좌표,색, stage정보 전달(얘는 메모리 설정 위해서 전달)
             }
-            setDol(status[stage].x, status[stage].y, ai_color);
+            x = status[stage].x;
+            y = status[stage].y;
+            setDol(x,y, ai_color);
             printf("\n AI가 %d,%d 에 뒀습니다. \n\n", status[stage].x, status[stage].y);
             printBoard();
         }//AI는 알아서 좌표에 넣도록 할까...?
@@ -521,7 +516,7 @@ int main() {
                 win = 0;
             }
             else{
-                printf("플레이어 패배! \n");
+                printf("플레이어 패배! 쿠쿠루삥빵뽕 \n");
                 win = 0;
             }
         }

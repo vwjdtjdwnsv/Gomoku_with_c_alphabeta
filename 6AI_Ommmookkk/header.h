@@ -16,12 +16,14 @@
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 
+
+
 const int N = 19; // 19 * 19 오목
 char board[N][N]; //보드판 선언
 int stage = 0; //진행한 stage, 얘를 쓸까?
 int timelimit = 10;//시간제한기본10초로 두자
 
-int depthLimit = 3;
+int depthLimit = 2;
 
 
 int player; //플레이어 선택 1or2
@@ -78,8 +80,8 @@ struct coordinate getNextMove(void);//보드, 현재 좌표정보 그냥 call by
 //다음 좌표를 구한다.
 struct coordinate alphaBetaSearch(void);
 
-int MaxValue(int alpha,int beta,int depth);
-int MinValue(int alpha,int beta,int depth);
+struct action MaxValue(int alpha,int beta,int depth);
+struct action MinValue(int alpha,int beta,int depth);
 
 void DeepSearch(int x,int y,char color);
 void Backtracking(void);//search를 위해
@@ -97,7 +99,7 @@ bool isOverlap(int index,int x,int y,struct action actions[]){
 
 struct action *getActions(char color, bool MaxTurn){//MAX면 v=-10000으로 초기값 설정
     
-    struct action *posActions = malloc(8 * stage * sizeof(struct action));    // 구조체 포인터에 동적 메모리 할당;
+    struct action *posActions = malloc((8 * stage + 1) * sizeof(struct action));    // 구조체 포인터에 동적 메모리 할당;
     
     char c=color;//액션에서 둘 돌의 색
     int index=0;//action을 넣기 위한 index
@@ -116,10 +118,11 @@ struct action *getActions(char color, bool MaxTurn){//MAX면 v=-10000으로 초�
         //8방향에 대해 각각 유효 위치인지, 33은 아닌지 파악, 가능한 좌표라면 저장
         //위 유효엑션확인,맞으면 action 저장, value 초기화
         if(isLegal(x-1, y)){
-            setDol(x-1, y, c);
             
-            if(!isThree(x-1, y)){
-                while (!isOverlap(index, x-1, y, posActions)) {
+            setDol(x-1, y, c);//유효하고, 빈 곳이라면 -> 둘 수 있으면 돌을 두고
+            
+            if(!isThree(x-1, y)){//33이 아니라면,
+                if (!isOverlap(index, x-1, y, posActions)) {//그리고 중복되지 않았다면
                     posActions[index].move.x = x-1;
                     posActions[index].move.y = y;
                     posActions[index].value = init_value;
@@ -134,7 +137,7 @@ struct action *getActions(char color, bool MaxTurn){//MAX면 v=-10000으로 초�
         if(isLegal(x+1, y)){
             setDol(x+1, y, c);
             if(!isThree(x+1, y)){
-                while (!isOverlap(index, x+1, y, posActions)) {
+                if (!isOverlap(index, x+1, y, posActions)) {
                     posActions[index].move.x = x+1;
                     posActions[index].move.y = y;
                     posActions[index].value = init_value;
